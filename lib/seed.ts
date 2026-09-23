@@ -63,11 +63,11 @@ export function seedIfEmpty() {
   if (isEmpty("gallery_images")) {
     const stmt = db.prepare(
       `INSERT INTO gallery_images (alt, url, event_id, program_tag, "order")
-       VALUES (?, NULL, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?)`
     );
     const txn = db.transaction(() => {
       gallery.forEach((g, i) => {
-        stmt.run(g.alt, g.event_id ?? null, g.program_tag ?? null, g.order || i + 1);
+        stmt.run(g.alt, g.url ?? null, g.event_id ?? null, g.program_tag ?? null, g.order || i + 1);
       });
     });
     txn();

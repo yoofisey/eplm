@@ -30,7 +30,7 @@ export const events: Event[] = [
       "A weekend retreat of silence, Scripture and worship for women carrying heavy loads. Transport and lodging arranged.",
     date: "2026-12-04",
     start_time: "16:00",
-    end_time: "2026-12-06",
+    end_time: "18:00",
     location: "Aburi Gardens Lodge",
     capacity: 40,
   },
