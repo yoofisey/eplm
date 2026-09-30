@@ -27,12 +27,20 @@ export function GalleryAddForm({ tags }: { tags: string[] }) {
               placeholder="Describe the photo"
             />
           </Field>
-          <Field label="Image URL" htmlFor="gallery-url">
+          <Field label="Image file (from your device)" htmlFor="gallery-file">
+            <input
+              id="gallery-file"
+              name="file"
+              type="file"
+              accept="image/*"
+              className={inputClasses}
+            />
+          </Field>
+          <Field label="…or paste an image URL" htmlFor="gallery-url">
             <input
               id="gallery-url"
               name="url"
               type="url"
-              required
               className={inputClasses}
               placeholder="https://…"
             />

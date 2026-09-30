@@ -47,6 +47,8 @@ db.exec(`
     event_id TEXT,
     program_tag TEXT,
     "order" INTEGER NOT NULL DEFAULT 0,
+    mime TEXT,
+    data BLOB,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -183,6 +185,16 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+const galleryColumns = db
+  .prepare("PRAGMA table_info(gallery_images)")
+  .all() as { name: string }[];
+if (!galleryColumns.some((c) => c.name === "mime")) {
+  db.exec("ALTER TABLE gallery_images ADD COLUMN mime TEXT");
+}
+if (!galleryColumns.some((c) => c.name === "data")) {
+  db.exec("ALTER TABLE gallery_images ADD COLUMN data BLOB");
+}
 
 export { db, dbPath };
 

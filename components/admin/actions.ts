@@ -6,7 +6,11 @@ import {
   adminCreateEvent as libAdminCreateEvent,
   adminCreatePost as libAdminCreatePost,
   adminDeleteDues as libAdminDeleteDues,
+  adminDeleteEvent as libAdminDeleteEvent,
+  adminDeleteGalleryImage as libAdminDeleteGalleryImage,
+  adminDeletePost as libAdminDeletePost,
   adminLogin as libAdminLogin,
+  adminLogout as libAdminLogout,
   adminMarkDuesPaid as libAdminMarkDuesPaid,
   adminSendText as libAdminSendText,
   markMessageStatus as libMarkMessageStatus,
@@ -18,6 +22,10 @@ export async function adminLogin(
   formData: FormData,
 ): Promise<ActionState> {
   return libAdminLogin(prev, formData);
+}
+
+export async function adminLogout(): Promise<void> {
+  return libAdminLogout();
 }
 
 export async function adminCreatePost(
@@ -57,6 +65,18 @@ export async function adminMarkDuesPaid(
 
 export async function adminDeleteDues(formData: FormData): Promise<void> {
   return libAdminDeleteDues(formData);
+}
+
+export async function adminDeleteEvent(formData: FormData): Promise<void> {
+  return libAdminDeleteEvent(formData);
+}
+
+export async function adminDeleteGalleryImage(formData: FormData): Promise<void> {
+  return libAdminDeleteGalleryImage(formData);
+}
+
+export async function adminDeletePost(formData: FormData): Promise<void> {
+  return libAdminDeletePost(formData);
 }
 
 export async function adminSendText(

@@ -8,7 +8,7 @@ import {
   getDues,
   memberDuesStatus,
 } from "@/lib/repo";
-import { adminDeleteDues } from "@/lib/admin";
+import { adminDeleteDues } from "@/components/admin/actions";
 import { formatCents, formatDate } from "@/components/admin/format";
 import { StatCard } from "@/components/admin/StatCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";

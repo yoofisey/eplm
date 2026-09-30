@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { upcomingEvents, pastEvents, eventCount, rsvpsForEvent } from "@/lib/repo";
-import { adminDeleteEvent } from "@/lib/admin";
+import { adminDeleteEvent } from "@/components/admin/actions";
 import { formatDate } from "@/components/admin/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { EventCountdown } from "@/components/admin/EventCountdown";

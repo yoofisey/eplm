@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthed } from "@/lib/auth";
-import { adminLogout } from "@/lib/admin";
+import { adminLogout } from "@/components/admin/actions";
 import {
   donationCount,
   eventCount,
@@ -13,7 +13,11 @@ import {
   smsMessageCount,
 } from "@/lib/repo";
 
-export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+export default async function AdminProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   if (!(await isAdminAuthed())) redirect("/admin/login");
 
   const counts: Record<string, number> = {

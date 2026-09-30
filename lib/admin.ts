@@ -137,9 +137,43 @@ export async function adminAddGalleryImage(
   const alt = text(formData.get("alt"));
   const url = text(formData.get("url"));
   const program_tag = text(formData.get("program_tag"));
-  if (!alt || !url) {
-    return { ok: false, message: "Alt text and an image URL are required." };
+  const file = formData.get("file");
+
+  if (!alt) {
+    return { ok: false, message: "Alt text is required." };
   }
+
+  if (file instanceof File && file.size > 0) {
+    const MAX_BYTES = 10 * 1024 * 1024;
+    if (!file.type.startsWith("image/")) {
+      return { ok: false, message: "That file isn't an image." };
+    }
+    if (file.size > MAX_BYTES) {
+      return { ok: false, message: "Image must be 10 MB or smaller." };
+    }
+    try {
+      const mime = file.type || "application/octet-stream";
+      const data = new Uint8Array(await file.arrayBuffer());
+      const info = db
+        .prepare(
+          `INSERT INTO gallery_images (alt, url, event_id, program_tag, mime, data, "order")
+           SELECT ?, ?, NULL, NULLIF(?, ''), ?, ?, COALESCE(MAX("order"), 0) + 1 FROM gallery_images`,
+        )
+        .run(alt, null, program_tag, mime, data);
+      const id = Number(info.lastInsertRowid);
+      db.prepare(
+        `UPDATE gallery_images SET url = ? WHERE id = ?`,
+      ).run(`/uploads/gallery/${id}`, id);
+      return { ok: true, message: "Image uploaded to the gallery." };
+    } catch {
+      return { ok: false, message: "Couldn't save the image." };
+    }
+  }
+
+  if (!url) {
+    return { ok: false, message: "Add an image file or an image URL." };
+  }
+
   try {
     db.prepare(
       `INSERT INTO gallery_images (alt, url, event_id, program_tag, "order")

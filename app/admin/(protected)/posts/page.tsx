@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPosts, postCount } from "@/lib/repo";
-import { adminDeletePost } from "@/lib/admin";
+import { adminDeletePost } from "@/components/admin/actions";
 import { formatDate } from "@/components/admin/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ButtonLink } from "@/components/ui/Button";

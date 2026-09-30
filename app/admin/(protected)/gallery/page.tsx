@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getGalleryImages, galleryCount, galleryTags } from "@/lib/repo";
-import { adminDeleteGalleryImage } from "@/lib/admin";
+import { adminDeleteGalleryImage } from "@/components/admin/actions";
 import { GalleryAddForm } from "@/components/admin/GalleryAddForm";
 
 export const metadata: Metadata = {

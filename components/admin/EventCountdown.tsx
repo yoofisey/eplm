@@ -48,6 +48,7 @@ export function EventCountdown({
           }`}
         >
           <p
+            suppressHydrationWarning
             className={`font-display text-2xl tabular-nums ${
               tone === "wine" ? "text-gold-soft dark:text-gold" : "text-wine dark:text-gold-soft"
             }`}

@@ -210,9 +210,19 @@ export function getGalleryImages() {
   if (tableEmpty("gallery_images")) return contentGalleryToRows();
   return db
     .prepare(
-      "SELECT * FROM gallery_images ORDER BY \"order\" ASC, id ASC"
+      'SELECT id, alt, url, event_id, program_tag, "order", created_at FROM gallery_images ORDER BY "order" ASC, id ASC'
     )
     .all() as GalleryRow[];
+}
+
+export type GalleryUpload = { mime: string; data: Buffer };
+
+export function getGalleryUpload(id: number): GalleryUpload | undefined {
+  const row = db
+    .prepare("SELECT mime, data FROM gallery_images WHERE id = ?")
+    .get(id) as { mime: string | null; data: Uint8Array | null } | undefined;
+  if (!row?.data) return undefined;
+  return { mime: row.mime ?? "application/octet-stream", data: Buffer.from(row.data) };
 }
 
 export function galleryCount() {
