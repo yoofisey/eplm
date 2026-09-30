@@ -2,9 +2,13 @@
 
 import {
   adminAddGalleryImage as libAdminAddGalleryImage,
+  adminAddMember as libAdminAddMember,
   adminCreateEvent as libAdminCreateEvent,
   adminCreatePost as libAdminCreatePost,
+  adminDeleteDues as libAdminDeleteDues,
   adminLogin as libAdminLogin,
+  adminMarkDuesPaid as libAdminMarkDuesPaid,
+  adminSendText as libAdminSendText,
   markMessageStatus as libMarkMessageStatus,
 } from "@/lib/admin";
 import type { ActionState } from "@/lib/actions";
@@ -35,6 +39,31 @@ export async function adminAddGalleryImage(
   formData: FormData,
 ): Promise<ActionState> {
   return libAdminAddGalleryImage(prev, formData);
+}
+
+export async function adminAddMember(
+  prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return libAdminAddMember(prev, formData);
+}
+
+export async function adminMarkDuesPaid(
+  prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return libAdminMarkDuesPaid(prev, formData);
+}
+
+export async function adminDeleteDues(formData: FormData): Promise<void> {
+  return libAdminDeleteDues(formData);
+}
+
+export async function adminSendText(
+  prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return libAdminSendText(prev, formData);
 }
 
 export async function markMessageStatus(formData: FormData): Promise<void> {

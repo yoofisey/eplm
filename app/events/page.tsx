@@ -7,6 +7,7 @@ import { RsvpForm } from "@/components/forms/RsvpForm";
 import { rsvpCount } from "@/lib/db";
 import type { Event } from "@/lib/types";
 import { Reveal } from "@/components/ui/Reveal";
+import { EventCountdown } from "@/components/admin/EventCountdown";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -93,6 +94,32 @@ export default async function EventsPage() {
         ) : (
           <>
             <h2 className="sr-only">Upcoming events</h2>
+            {upcoming[0] && (
+              <Reveal>
+                <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-ink/10 bg-wine p-6 shadow-sm sm:p-8 dark:border-parchment/10 dark:bg-ink">
+                  <div>
+                    <p className="font-display text-sm font-semibold tracking-[0.18em] text-gold-soft uppercase">
+                      Counting down to
+                    </p>
+                    <h2 className="mt-1 font-display text-2xl text-cream sm:text-3xl dark:text-parchment">
+                      {upcoming[0].title}
+                    </h2>
+                    <p className="mt-2 text-sm text-cream/85 dark:text-parchment/70">
+                      {formatEventDate(upcoming[0].date)} ·{" "}
+                      {formatTime(upcoming[0].start_time)} ·{" "}
+                      {upcoming[0].location}
+                    </p>
+                  </div>
+                  <div>
+                    <EventCountdown
+                      date={upcoming[0].date}
+                      startTime={upcoming[0].start_time}
+                      tone="wine"
+                    />
+                  </div>
+                </div>
+              </Reveal>
+            )}
             <div className="grid gap-6">
               {upcoming.map((event, i) => {
                 const left = seatsLeft(event);

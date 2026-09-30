@@ -8,6 +8,9 @@ const toneFor: Record<string, string> = {
   pending: "bg-gold/15 text-gold dark:text-gold-soft",
   confirmed: "bg-sage/15 text-sage",
   success: "bg-sage/15 text-sage",
+  paid: "bg-sage/15 text-sage",
+  unpaid: "bg-wine/15 text-wine dark:text-gold-soft",
+  queued: "bg-gold/15 text-gold dark:text-gold-soft",
 };
 
 export function StatusBadge({ status }: { status: string }) {

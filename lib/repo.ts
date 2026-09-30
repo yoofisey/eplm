@@ -323,4 +323,122 @@ export function rsvpsForEvent(eventSlug: string) {
   return count("SELECT COUNT(*) AS n FROM rsvps WHERE event_slug = ?", eventSlug);
 }
 
+// ---------- Dues ----------
+
+export type DuesRow = {
+  id: number;
+  member_id: number;
+  period: string;
+  amount_cents: number;
+  method: string;
+  notes: string | null;
+  paid_at: string;
+  created_at: string;
+  member_name: string;
+  member_email: string;
+  member_phone: string | null;
+};
+
+export function currentDuesPeriod() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function getDues(opts?: { period?: string; limit?: number }) {
+  let sql = `SELECT d.*, m.name AS member_name, m.email AS member_email, m.phone AS member_phone
+             FROM member_dues d LEFT JOIN members m ON m.id = d.member_id`;
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+  if (opts?.period) {
+    clauses.push("d.period = ?");
+    params.push(opts.period);
+  }
+  if (clauses.length) sql += " WHERE " + clauses.join(" AND ");
+  sql += " ORDER BY d.period DESC, d.paid_at DESC";
+  if (opts?.limit) sql += " LIMIT ?";
+  if (opts?.limit) params.push(opts.limit);
+  return db.prepare(sql).all(...params) as DuesRow[];
+}
+
+export function duesPeriods() {
+  const rows = db
+    .prepare("SELECT DISTINCT period FROM member_dues ORDER BY period DESC")
+    .all() as { period: string }[];
+  return rows.map((r) => r.period);
+}
+
+export function duePaidCount(period: string) {
+  return count("SELECT COUNT(*) AS n FROM member_dues WHERE period = ?", period);
+}
+
+export function dueTotalCents(period: string) {
+  const row = db
+    .prepare(
+      "SELECT COALESCE(SUM(amount_cents), 0) AS s FROM member_dues WHERE period = ?",
+    )
+    .get(period) as { s: number };
+  return row.s;
+}
+
+export function memberDuesStatus(period: string) {
+  const rows = db
+    .prepare(
+      `SELECT m.id, m.name, m.email, m.phone, m.status, m.created_at,
+              d.id AS dues_id, d.amount_cents, d.method, d.paid_at
+       FROM members m
+       LEFT JOIN member_dues d ON d.member_id = m.id AND d.period = ?
+       ORDER BY m.name COLLATE NOCASE ASC`,
+    )
+    .all(period) as (MemberRow & {
+    dues_id: number | null;
+    amount_cents: number | null;
+    method: string | null;
+    paid_at: string | null;
+  })[];
+  return rows;
+}
+
+// ---------- SMS outbox ----------
+
+export type SmsMessageRow = {
+  id: number;
+  audience: string;
+  event_id: number | null;
+  body: string;
+  recipient_count: number;
+  status: string;
+  created_at: string;
+};
+
+export type SmsRecipientRow = {
+  id: number;
+  message_id: number;
+  member_id: number | null;
+  name: string | null;
+  phone: string;
+  status: string;
+  error: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
+
+export function getSmsMessages(opts?: { limit?: number }) {
+  const rows = db
+    .prepare(
+      `SELECT * FROM sms_messages ORDER BY created_at DESC ${opts?.limit ? "LIMIT ?" : ""}`,
+    )
+    .all(...(opts?.limit ? [opts.limit] : [])) as SmsMessageRow[];
+  return rows;
+}
+
+export function getSmsRecipients(messageId: number) {
+  return db
+    .prepare("SELECT * FROM sms_recipients WHERE message_id = ? ORDER BY id ASC")
+    .all(messageId) as SmsRecipientRow[];
+}
+
+export function smsMessageCount() {
+  return count("SELECT COUNT(*) AS n FROM sms_messages");
+}
+
 export { rsvpCount };

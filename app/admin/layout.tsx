@@ -10,6 +10,7 @@ import {
   newMessageCount,
   pledgeCount,
   postCount,
+  smsMessageCount,
 } from "@/lib/repo";
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     pledges: pledgeCount(),
     messages: newMessageCount(),
     donations: donationCount(),
+    texts: smsMessageCount(),
   };
 
   const nav: { href: string; label: string; count?: keyof typeof counts }[] = [
@@ -31,8 +33,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     { href: "/admin/events", label: "Events", count: "events" },
     { href: "/admin/gallery", label: "Gallery", count: "gallery" },
     { href: "/admin/members", label: "Members", count: "members" },
+    { href: "/admin/dues", label: "Dues" },
     { href: "/admin/pledges", label: "Pledges", count: "pledges" },
     { href: "/admin/messages", label: "Messages", count: "messages" },
+    { href: "/admin/texts", label: "Texts", count: "texts" },
     { href: "/admin/donations", label: "Donations", count: "donations" },
   ];
 

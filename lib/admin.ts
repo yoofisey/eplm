@@ -157,6 +157,196 @@ export async function adminDeleteGalleryImage(formData: FormData): Promise<void>
   if (g.ok && id) db.prepare("DELETE FROM gallery_images WHERE id = ?").run(id);
 }
 
+// ---------- Members ----------
+
+export async function adminAddMember(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const g = await guard();
+  if (!g.ok) return { ok: false, message: "Signed out. Sign back in first." };
+  const name = text(formData.get("name"));
+  const email = text(formData.get("email"));
+  const phone = text(formData.get("phone"));
+  const occupation = text(formData.get("occupation"));
+  const circles = text(formData.get("circles"));
+  const source = text(formData.get("source"));
+  const status = text(formData.get("status")) || "active";
+
+  if (!name || !email) {
+    return {
+      ok: false,
+      message: "Name and email are required to add a member.",
+    };
+  }
+
+  try {
+    db.prepare(
+      `INSERT INTO members (name, email, phone, occupation, circles, source, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).run(name, email, phone || null, occupation || null, circles || null, source || null, status);
+    return { ok: true, message: "Member added." };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error && /UNIQUE/.test(e.message) ? "A member with that email already exists." : "Couldn't add the member.",
+    };
+  }
+}
+
+// ---------- Dues ----------
+
+export async function adminMarkDuesPaid(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const g = await guard();
+  if (!g.ok) return { ok: false, message: "Signed out. Sign back in first." };
+  const member_id = Number(text(formData.get("member_id")));
+  const period = text(formData.get("period"));
+  const amount = Number(text(formData.get("amount")));
+  const amount_cents = Math.round(Number.isFinite(amount) ? amount * 100 : 0);
+  const method = text(formData.get("method")) || "cash";
+  const notes = text(formData.get("notes"));
+
+  if (!member_id || !period || amount_cents <= 0) {
+    return {
+      ok: false,
+      message: "Member, period and an amount above zero are required.",
+    };
+  }
+
+  try {
+    db.prepare(
+      `INSERT INTO member_dues (member_id, period, amount_cents, method, notes)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(member_id, period) DO UPDATE SET
+         amount_cents = excluded.amount_cents,
+         method = excluded.method,
+         notes = excluded.notes,
+         paid_at = datetime('now')`,
+    ).run(member_id, period, amount_cents, method, notes || null);
+    return { ok: true, message: `Dues recorded for ${period}.` };
+  } catch {
+    return { ok: false, message: "Couldn't record the dues payment." };
+  }
+}
+
+export async function adminDeleteDues(formData: FormData): Promise<void> {
+  const id = Number(text(formData.get("id")));
+  const g = await guard();
+  if (g.ok && id) db.prepare("DELETE FROM member_dues WHERE id = ?").run(id);
+}
+
+// ---------- Mass texts (record-only outbox) ----------
+
+type TextRecipient = { member_id: number | null; name: string; phone: string };
+
+function collectRecipients(formData: FormData): TextRecipient[] {
+  const audience = text(formData.get("audience"));
+  const seen = new Set<string>();
+  const out: TextRecipient[] = [];
+
+  const push = (name: string, phone: string, member_id: number | null = null) => {
+    const clean = phone.trim().replace(/[^\d+]/g, "");
+    if (!clean) return;
+    const key = `${member_id ?? ""}:${clean}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ member_id, name, phone: clean });
+  };
+
+  if (audience === "all-members" || audience === "unpaid-members") {
+    const period = text(formData.get("period")) || currentPeriod();
+    const rows = db
+      .prepare(
+        audience === "all-members"
+          ? `SELECT id, name, phone FROM members WHERE status = 'active' AND phone IS NOT NULL`
+          : `SELECT m.id, m.name, m.phone FROM members m
+             WHERE m.status = 'active' AND m.phone IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM member_dues d WHERE d.member_id = m.id AND d.period = ?)`,
+      )
+      .all(...(audience === "unpaid-members" ? [period] : [])) as {
+      id: number;
+      name: string;
+      phone: string;
+    }[];
+    rows.forEach((r) => push(r.name, r.phone, r.id));
+  } else if (audience === "event-rsvps") {
+    const slug = text(formData.get("event_slug"));
+    const rows = db
+      .prepare(
+        `SELECT r.name, r.phone FROM rsvps r
+         WHERE r.event_slug = ? AND r.phone IS NOT NULL`,
+      )
+      .all(slug) as { name: string; phone: string }[];
+    rows.forEach((r) => push(r.name, r.phone));
+  } else if (audience === "phone-list") {
+    text(formData.get("phone_list"))
+      .split(/[\n,]+/)
+      .forEach((p) => push("", p));
+  }
+
+  return out;
+}
+
+function currentPeriod() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export async function adminSendText(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const g = await guard();
+  if (!g.ok) return { ok: false, message: "Signed out. Sign back in first." };
+  const audience = text(formData.get("audience"));
+  const body = text(formData.get("body"));
+  const eventId = Number(text(formData.get("event_id"))) || null;
+
+  if (!body) {
+    return { ok: false, message: "Write a message before sending." };
+  }
+
+  const recipients = collectRecipients(formData);
+  if (recipients.length === 0) {
+    return {
+      ok: false,
+      message: "No recipients with phone numbers matched that audience.",
+    };
+  }
+
+  let messageId = 0;
+  try {
+    const info = db
+      .prepare(
+        `INSERT INTO sms_messages (audience, event_id, body, recipient_count, status)
+         VALUES (?, ?, ?, ?, 'queued')`,
+      )
+      .run(audience, eventId, body, recipients.length);
+    messageId = Number(info.lastInsertRowid);
+
+    const insert = db.prepare(
+      `INSERT INTO sms_recipients (message_id, member_id, name, phone)
+       VALUES (?, ?, ?, ?)`,
+    );
+    const tx = db.transaction((rows: TextRecipient[]) => {
+      for (const r of rows) {
+        insert.run(messageId, r.member_id, r.name || null, r.phone);
+      }
+    });
+    tx(recipients);
+
+    return {
+      ok: true,
+      message: `Queued for ${recipients.length} recipient${recipients.length === 1 ? "" : "s"}. Sending will light up once an SMS provider is connected — for now this is recorded in the outbox.`,
+    };
+  } catch {
+    return { ok: false, message: "Couldn't record the text batch." };
+  }
+}
+
 // ---------- Inbox: mark handled ----------
 
 export async function markMessageStatus(formData: FormData): Promise<void> {

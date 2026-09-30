@@ -3,6 +3,7 @@ import { upcomingEvents, pastEvents, eventCount, rsvpsForEvent } from "@/lib/rep
 import { adminDeleteEvent } from "@/lib/admin";
 import { formatDate } from "@/components/admin/format";
 import { ButtonLink } from "@/components/ui/Button";
+import { EventCountdown } from "@/components/admin/EventCountdown";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export default async function AdminEventsPage() {
   const upcoming = await upcomingEvents();
   const past = await pastEvents();
+  const next = upcoming[0];
 
   const renderEvent = (event: { id: number; slug: string; title: string; date: string; start_time: string; location: string }) => (
     <div
@@ -62,6 +64,25 @@ export default async function AdminEventsPage() {
           New event
         </ButtonLink>
       </header>
+
+      {next && (
+        <section className="mb-6 rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.14em] text-gold uppercase">
+                Next up
+              </p>
+              <h2 className="mt-1 font-display text-2xl text-ink dark:text-parchment">
+                {next.title}
+              </h2>
+              <p className="mt-1 text-sm text-ink-soft dark:text-parchment/70">
+                {formatDate(next.date)} · {next.start_time} · {next.location}
+              </p>
+            </div>
+            <EventCountdown date={next.date} startTime={next.start_time} />
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
         <h2 className="font-display text-xl">Upcoming</h2>

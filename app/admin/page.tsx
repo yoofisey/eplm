@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  currentDuesPeriod,
   donationCount,
   donationTotalCents,
+  duePaidCount,
+  dueTotalCents,
   eventCount,
   galleryCount,
   getDonations,
   getMessages,
   memberCount,
+  memberDuesStatus,
   newMessageCount,
   pledgeCount,
   pledgeTotalCents,
   postCount,
+  upcomingEvents,
 } from "@/lib/repo";
 import { formatCents, formatDate } from "@/components/admin/format";
 import { StatCard } from "@/components/admin/StatCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { EventCountdown } from "@/components/admin/EventCountdown";
 
 export const metadata: Metadata = {
   title: "Admin dashboard",
@@ -37,9 +43,14 @@ type DonationRow = {
   donor_email: string | null;
 };
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
   const recentMessages = getMessages().slice(0, 5);
   const recentDonations = getDonations({ limit: 5 }) as DonationRow[];
+  const period = currentDuesPeriod();
+  const duesStatus = memberDuesStatus(period);
+  const duesPaid = duePaidCount(period);
+  const upcoming = await upcomingEvents();
+  const nextEvent = upcoming[0];
 
   const stats = [
     { label: "Posts", value: String(postCount()), tone: "default" },
@@ -58,6 +69,16 @@ export default function AdminDashboardPage() {
       value: formatCents(donationTotalCents()),
       tone: "gold",
     },
+    {
+      label: `Dues paid · ${period}`,
+      value: `${duesPaid} of ${duesStatus.length}`,
+      tone: "sage",
+    },
+    {
+      label: `Dues collected · ${period}`,
+      value: formatCents(dueTotalCents(period)),
+      tone: "gold",
+    },
   ] as const;
 
   return (
@@ -74,6 +95,26 @@ export default function AdminDashboardPage() {
           recorded so far.
         </p>
       </header>
+
+      {nextEvent && (
+        <section className="mb-8 rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.14em] text-gold uppercase">
+                Next up
+              </p>
+              <h2 className="mt-1 font-display text-2xl text-ink dark:text-parchment">
+                {nextEvent.title}
+              </h2>
+              <p className="mt-1 text-sm text-ink-soft dark:text-parchment/70">
+                {formatDate(nextEvent.date)} · {nextEvent.start_time} ·{" "}
+                {nextEvent.location}
+              </p>
+            </div>
+            <EventCountdown date={nextEvent.date} startTime={nextEvent.start_time} />
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (

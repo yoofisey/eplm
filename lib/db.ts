@@ -148,6 +148,40 @@ db.exec(`
     source TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS member_dues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL REFERENCES members(id),
+    period TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL,
+    method TEXT NOT NULL DEFAULT 'cash',
+    notes TEXT,
+    paid_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (member_id, period)
+  );
+
+  CREATE TABLE IF NOT EXISTS sms_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    audience TEXT NOT NULL,
+    event_id INTEGER,
+    body TEXT NOT NULL,
+    recipient_count INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'queued',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS sms_recipients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id INTEGER NOT NULL REFERENCES sms_messages(id),
+    member_id INTEGER,
+    name TEXT,
+    phone TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'queued',
+    error TEXT,
+    sent_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 export { db, dbPath };

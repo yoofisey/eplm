@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getMembers, memberCount } from "@/lib/repo";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDate } from "@/components/admin/format";
+import { ButtonLink } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Members",
@@ -13,16 +14,25 @@ export default function AdminMembersPage() {
 
   return (
     <>
-      <header className="mb-8">
-        <p className="font-display text-sm font-semibold tracking-[0.18em] text-gold uppercase">
-          Community
-        </p>
-        <h1 className="mt-1 font-display text-3xl leading-tight sm:text-4xl">
-          Members
-        </h1>
-        <p className="mt-2 text-sm text-ink-soft dark:text-parchment/70">
-          {memberCount()} active of {members.length} total
-        </p>
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-display text-sm font-semibold tracking-[0.18em] text-gold uppercase">
+            Community
+          </p>
+          <h1 className="mt-1 font-display text-3xl leading-tight sm:text-4xl">
+            Members
+          </h1>
+          <p className="mt-2 text-sm text-ink-soft dark:text-parchment/70">
+            {memberCount()} active of {members.length} total
+          </p>
+        </div>
+        <ButtonLink
+          href="/admin/members/new"
+          transitionTypes={["nav-forward"]}
+          variant="wine"
+        >
+          Add member
+        </ButtonLink>
       </header>
 
       {members.length === 0 ? (
