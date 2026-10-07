@@ -3,6 +3,7 @@ import { getMembers, memberCount } from "@/lib/repo";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDate } from "@/components/admin/format";
 import { ButtonLink } from "@/components/ui/Button";
+import { ImportForm } from "@/components/admin/ImportForm";
 
 export const metadata: Metadata = {
   title: "Members",
@@ -34,6 +35,17 @@ export default function AdminMembersPage() {
           Add member
         </ButtonLink>
       </header>
+
+      <div className="mb-8 rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
+        <h2 className="font-display text-lg">Import in bulk</h2>
+        <p className="mt-1 text-sm text-ink-soft dark:text-parchment/70">
+          Already have a member list in a spreadsheet? Upload it instead of adding
+          people one at a time.
+        </p>
+        <div className="mt-4 max-w-xl">
+          <ImportForm target="Members" />
+        </div>
+      </div>
 
       {members.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink/20 p-10 text-center text-sm text-ink-soft dark:border-parchment/20 dark:text-parchment/60">

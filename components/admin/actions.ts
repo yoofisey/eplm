@@ -9,9 +9,11 @@ import {
   adminDeleteEvent as libAdminDeleteEvent,
   adminDeleteGalleryImage as libAdminDeleteGalleryImage,
   adminDeletePost as libAdminDeletePost,
+  adminImportRecords as libAdminImportRecords,
   adminLogin as libAdminLogin,
   adminLogout as libAdminLogout,
   adminMarkDuesPaid as libAdminMarkDuesPaid,
+  adminRecordAttendance as libAdminRecordAttendance,
   adminSendText as libAdminSendText,
   markMessageStatus as libMarkMessageStatus,
 } from "@/lib/admin";
@@ -88,4 +90,18 @@ export async function adminSendText(
 
 export async function markMessageStatus(formData: FormData): Promise<void> {
   return libMarkMessageStatus(formData);
+}
+
+export async function adminImportRecords(
+  prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return libAdminImportRecords(prev, formData);
+}
+
+export async function adminRecordAttendance(
+  prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return libAdminRecordAttendance(prev, formData);
 }

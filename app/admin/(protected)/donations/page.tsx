@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getDonations, donationCount, donationTotalCents } from "@/lib/repo";
 import { formatCents, formatDate } from "@/components/admin/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ImportForm } from "@/components/admin/ImportForm";
 
 export const metadata: Metadata = {
   title: "Donations",
@@ -43,6 +44,17 @@ export default function AdminDonationsPage() {
           successful
         </p>
       </header>
+
+      <div className="mb-8 rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
+        <h2 className="font-display text-lg">Import in bulk</h2>
+        <p className="mt-1 text-sm text-ink-soft dark:text-parchment/70">
+          Bring in a giving record from Excel, a bank export or Word — the header
+          row is matched automatically.
+        </p>
+        <div className="mt-4 max-w-xl">
+          <ImportForm target="Donations" />
+        </div>
+      </div>
 
       {donations.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink/20 p-10 text-center text-sm text-ink-soft dark:border-parchment/20 dark:text-parchment/60">

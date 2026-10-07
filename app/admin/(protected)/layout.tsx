@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdminAuthed } from "@/lib/auth";
 import { adminLogout } from "@/components/admin/actions";
 import {
+  attendanceCount,
   donationCount,
   eventCount,
   galleryCount,
@@ -29,6 +30,7 @@ export default async function AdminProtectedLayout({
     messages: newMessageCount(),
     donations: donationCount(),
     texts: smsMessageCount(),
+    attendance: attendanceCount(),
   };
 
   const nav: { href: string; label: string; count?: keyof typeof counts }[] = [
@@ -37,6 +39,7 @@ export default async function AdminProtectedLayout({
     { href: "/admin/events", label: "Events", count: "events" },
     { href: "/admin/gallery", label: "Gallery", count: "gallery" },
     { href: "/admin/members", label: "Members", count: "members" },
+    { href: "/admin/attendance", label: "Attendance", count: "attendance" },
     { href: "/admin/dues", label: "Dues" },
     { href: "/admin/pledges", label: "Pledges", count: "pledges" },
     { href: "/admin/messages", label: "Messages", count: "messages" },

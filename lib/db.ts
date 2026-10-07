@@ -173,6 +173,20 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS event_attendance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_slug TEXT,
+    member_id INTEGER,
+    member_name TEXT NOT NULL,
+    attended_on TEXT,
+    present INTEGER NOT NULL DEFAULT 1,
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_attendance_identity
+    ON event_attendance (member_name COLLATE NOCASE, COALESCE(event_slug, ''), COALESCE(attended_on, ''));
+
   CREATE TABLE IF NOT EXISTS sms_recipients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     message_id INTEGER NOT NULL REFERENCES sms_messages(id),

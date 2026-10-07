@@ -11,6 +11,8 @@ const toneFor: Record<string, string> = {
   paid: "bg-sage/15 text-sage",
   unpaid: "bg-wine/15 text-wine dark:text-gold-soft",
   queued: "bg-gold/15 text-gold dark:text-gold-soft",
+  present: "bg-sage/15 text-sage",
+  absent: "bg-wine/15 text-wine dark:text-gold-soft",
 };
 
 export function StatusBadge({ status }: { status: string }) {

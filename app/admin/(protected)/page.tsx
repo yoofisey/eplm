@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  attendanceCount,
   currentDuesPeriod,
   donationCount,
   donationTotalCents,
@@ -57,6 +58,7 @@ export default async function AdminDashboardPage() {
     { label: "Events", value: String(eventCount()), tone: "default" },
     { label: "Gallery images", value: String(galleryCount()), tone: "default" },
     { label: "Members", value: String(memberCount()), tone: "default" },
+    { label: "Attendance check-ins", value: String(attendanceCount()), tone: "sage" },
     { label: "Active pledges", value: String(pledgeCount()), tone: "sage" },
     {
       label: "Monthly pledge total",

@@ -333,6 +333,41 @@ export function rsvpsForEvent(eventSlug: string) {
   return count("SELECT COUNT(*) AS n FROM rsvps WHERE event_slug = ?", eventSlug);
 }
 
+// ---------- Attendance ----------
+
+export type AttendanceRow = {
+  id: number;
+  event_slug: string | null;
+  member_id: number | null;
+  member_name: string;
+  attended_on: string | null;
+  present: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export function getAttendance(opts?: { limit?: number }) {
+  const rows = db
+    .prepare(
+      `SELECT * FROM event_attendance
+       ORDER BY COALESCE(attended_on, created_at) DESC, id DESC
+       ${opts?.limit ? "LIMIT ?" : ""}`,
+    )
+    .all(...(opts?.limit ? [opts.limit] : [])) as AttendanceRow[];
+  return rows;
+}
+
+export function attendanceCount() {
+  return count("SELECT COUNT(*) AS n FROM event_attendance WHERE present = 1");
+}
+
+export function eventSlugs(): string[] {
+  const rows = db
+    .prepare("SELECT slug FROM events ORDER BY date DESC")
+    .all() as { slug: string }[];
+  return rows.map((r) => r.slug);
+}
+
 // ---------- Dues ----------
 
 export type DuesRow = {

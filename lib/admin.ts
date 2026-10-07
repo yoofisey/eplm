@@ -1,6 +1,8 @@
 ﻿import "server-only";
 import type { ActionState } from "@/lib/actions";
 import { db } from "@/lib/db";
+import { parseImportFile } from "@/lib/importer";
+import { runImport, TARGET_SPECS, upsertAttendance } from "@/lib/importers";
 import {
   createAdminSession,
   destroyAdminSession,
@@ -389,4 +391,81 @@ export async function markMessageStatus(formData: FormData): Promise<void> {
   const to = actionMap[text(formData.get("action"))];
   const g = await guard();
   if (g.ok && id && to) db.prepare("UPDATE contact_messages SET status = ? WHERE id = ?").run(to, id);
+}
+
+// ---------- Attendance ----------
+
+export async function adminRecordAttendance(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const g = await guard();
+  if (!g.ok) return { ok: false, message: "Signed out. Sign back in first." };
+
+  const present = text(formData.get("present")) !== "absent";
+  const res = upsertAttendance({
+    memberName: text(formData.get("member_name")),
+    eventSlug: text(formData.get("event_slug")),
+    attendedOn: text(formData.get("attended_on")) || null,
+    present,
+    notes: text(formData.get("notes")) || null,
+  });
+  if (!res.ok) return { ok: false, fieldErrors: { member_name: res.message } };
+  return {
+    ok: true,
+    message: res.updated
+      ? "Attendance updated for that member and date."
+      : "Attendance recorded.",
+  };
+}
+
+// ---------- Bulk import (CSV / XLSX / DOCX) ----------
+
+const IMPORT_TARGETS = ["members", "donations", "events", "attendance"] as const;
+type ImportTarget = (typeof IMPORT_TARGETS)[number];
+
+const IMPORT_MAX_BYTES = 8 * 1024 * 1024;
+
+export async function adminImportRecords(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const g = await guard();
+  if (!g.ok) return { ok: false, message: "Signed out. Sign back in first." };
+
+  const target = text(formData.get("target")) as ImportTarget;
+  if (!IMPORT_TARGETS.includes(target)) {
+    return { ok: false, message: "Choose what to import." };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, message: "Pick a CSV, Excel (.xlsx) or Word (.docx) file." };
+  }
+  if (file.size > IMPORT_MAX_BYTES) {
+    return { ok: false, message: "That file is over 8 MB. Split it into smaller files." };
+  }
+
+  try {
+    const parsed = await parseImportFile(file);
+    if (parsed.headers.length === 0) {
+      return { ok: false, message: "Couldn't read a header row from that file." };
+    }
+    if (parsed.rows.length === 0) {
+      return { ok: false, message: "That file has headers but no data rows." };
+    }
+
+    const { summary, unmapped } = runImport(target, parsed.headers, parsed.rows);
+    const label = TARGET_SPECS[target].label;
+    const ignored = unmapped.length > 0 ? ` Ignored columns: ${unmapped.join(", ")}.` : "";
+    return {
+      ok: true,
+      message: `Imported ${summary.imported} ${label.toLowerCase()} record${summary.imported === 1 ? "" : "s"}${summary.skipped > 0 ? `, skipped ${summary.skipped}` : ""}.${ignored}`,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error ? e.message : "Couldn't read that file.",
+    };
+  }
 }

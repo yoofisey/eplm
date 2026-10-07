@@ -4,6 +4,7 @@ import { adminDeleteEvent } from "@/components/admin/actions";
 import { formatDate } from "@/components/admin/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { EventCountdown } from "@/components/admin/EventCountdown";
+import { ImportForm } from "@/components/admin/ImportForm";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -83,6 +84,17 @@ export default async function AdminEventsPage() {
           </div>
         </section>
       )}
+
+      <section className="mb-8 rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
+        <h2 className="font-display text-lg">Import in bulk</h2>
+        <p className="mt-1 text-sm text-ink-soft dark:text-parchment/70">
+          Load a whole season calendar from a spreadsheet instead of creating each
+          event by hand.
+        </p>
+        <div className="mt-4 max-w-xl">
+          <ImportForm target="Events" />
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-ink/10 bg-surface p-6 shadow-sm dark:border-parchment/10">
         <h2 className="font-display text-xl">Upcoming</h2>
